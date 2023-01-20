@@ -1,43 +1,3 @@
-# from django.shortcuts import render, redirect
-# from .models import Student
-# from django.contrib.auth import authenticate, login
-# from django.http import JsonResponse
-
-
-# def student_registration(request):
-#     if request.method == 'POST':
-#         first_name = request.POST['first_name']
-#         last_name = request.POST['last_name']
-#         email = request.POST['email']
-#         password = request.POST['password']
-#         date_of_birth = request.POST['date_of_birth']
-#         address = request.POST['address']
-#         student = Student(first_name=first_name, last_name=last_name, email=email, password=password, date_of_birth=date_of_birth, address=address)
-
-
-#         student.save()
-#         return JsonResponse({"status":"success","message":"Register Successful"})
-#     else:
-#         return JsonResponse({"status":"error","message":"Invalid request"})
-
-
-
-
-# def login_view(request):
-#     if request.method == 'POST':
-#         email = request.POST.get('email')
-#         password = request.POST.get('password')
-#         user = authenticate(request, email=email, password=password)
-#         if user is not None:
-#             login(request, user)
-#             # Return a success message
-#             return JsonResponse({"status":"success","message":"Login Successful"})
-#         else:
-#             # Return an error message
-#             return JsonResponse({"status":"error","message":"Invalid login"})
-#     else:
-#         return JsonResponse({"status":"error","message":"Invalid request"})
-
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login
 from .models import Student,Teacher
@@ -103,3 +63,28 @@ def teacher_login_view(request):
                 return JsonResponse({"status":"error","message":"Invalid login"})
         except Exception as e:
             return JsonResponse({"status":"error","message":"error logging in"})
+
+def user_info(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            email = data.get('email')
+            role = data.get('role')
+            if role == 'student':
+                student = Student.objects.filter(email=email).first()
+                if student:
+                    user_info = {'name': student.name, 'email': student.email, 'user_type':'student'}
+                    return JsonResponse({"status":"success","user_info": user_info})
+                else:
+                    return JsonResponse({"status":"error","message":"Invalid Email"})
+            elif role == 'teacher':
+                teacher = Teacher.objects.filter(email=email).first()
+                if teacher:
+                    user_info = {'name': teacher.name, 'email': teacher.email, 'user_type':'teacher'}
+                    return JsonResponse({"status":"success","user_info": user_info})
+                else:
+                    return JsonResponse({"status":"error","message":"Invalid Email"})
+            else:
+                return JsonResponse({"status":"error","message":"Invalid role"})
+        except Exception as e:
+            return JsonResponse({"status":"error","message":"Error retrieving user information"})
